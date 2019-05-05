@@ -105,12 +105,6 @@ open class Floaty: UIView {
   @objc open var plusColor: UIColor = UIColor(white: 0.2, alpha: 1)
   
   /**
-   Background overlaying color.
-   */
-  @IBInspectable
-  @objc open var overlayColor: UIColor = UIColor.black.withAlphaComponent(0.3)
-  
-  /**
    The space between the item and item.
    */
   @IBInspectable
@@ -215,18 +209,6 @@ open class Floaty: UIView {
   fileprivate var tintLayer: CAShapeLayer = CAShapeLayer()
   
   /**
-   If you show items, background overlaid with overlayColor.
-   */
-  //    private var overlayLayer: CAShapeLayer = CAShapeLayer()
-  
-  fileprivate var overlayView : UIControl = UIControl()
-  
-  /**
-   Keep track of whether overlay open animation completes, to avoid animation conflicts.
-   */
-  fileprivate var overlayViewDidCompleteOpenAnimation: Bool = true
-  
-  /**
    If you created this object from storyboard or `initWithFrame`, this property set true.
    */
   fileprivate var isCustomFrame: Bool = false
@@ -317,24 +299,12 @@ open class Floaty: UIView {
     let animationGroup = DispatchGroup()
     
     if(items.count > 0){
-      
-      setOverlayView()
-      self.superview?.insertSubview(overlayView, aboveSubview: self)
-      self.superview?.bringSubviewToFront(self)
-      overlayView.addTarget(self, action: #selector(close), for: UIControl.Event.touchUpInside)
-      
-      overlayViewDidCompleteOpenAnimation = false
-      animationGroup.enter()
       UIView.animate(withDuration: 0.3, delay: 0,
                      usingSpringWithDamping: 0.55,
                      initialSpringVelocity: 0.3,
                      options: UIView.AnimationOptions(), animations: { () -> Void in
                       self.plusLayer.transform = CATransform3DMakeRotation(self.degreesToRadians(self.rotationDegrees), 0.0, 0.0, 1.0)
                       self.buttonImageView.transform = CGAffineTransform(rotationAngle: self.degreesToRadians(self.rotationDegrees))
-                      self.overlayView.alpha = 1
-      }, completion: {(f) -> Void in
-        self.overlayViewDidCompleteOpenAnimation = true
-        animationGroup.leave()
       })
       
       switch openAnimationType {
@@ -370,20 +340,12 @@ open class Floaty: UIView {
     let animationGroup = DispatchGroup()
     
     if(items.count > 0){
-      self.overlayView.removeTarget(self, action: #selector(close), for: UIControl.Event.touchUpInside)
-      animationGroup.enter()
       UIView.animate(withDuration: 0.3, delay: 0,
                      usingSpringWithDamping: 0.6,
                      initialSpringVelocity: 0.8,
                      options: [], animations: { () -> Void in
                       self.plusLayer.transform = CATransform3DMakeRotation(self.degreesToRadians(0), 0.0, 0.0, 1.0)
                       self.buttonImageView.transform = CGAffineTransform(rotationAngle: self.degreesToRadians(0))
-                      self.overlayView.alpha = 0
-      }, completion: {(f) -> Void in
-        if self.overlayViewDidCompleteOpenAnimation {
-          self.overlayView.removeFromSuperview()
-        }
-        animationGroup.leave()
       })
       
       
@@ -670,24 +632,7 @@ open class Floaty: UIView {
     tintLayer.cornerRadius = size/2
     layer.addSublayer(tintLayer)
   }
-  
-  fileprivate func setOverlayView() {
-    setOverlayFrame()
-    overlayView.backgroundColor = overlayColor
-    overlayView.alpha = 0
-    overlayView.isUserInteractionEnabled = true
-    
-  }
-  fileprivate func setOverlayFrame() {
-    if let superview = superview {
-      overlayView.frame = CGRect(
-        x: 0,y: 0,
-        width: superview.bounds.width,
-        height: superview.bounds.height
-      )
-    }
-  }
-  
+
   fileprivate func setShadow() {
     if !hasShadow {
       return
@@ -829,7 +774,6 @@ open class Floaty: UIView {
     if (object as? UIView) == superview && (keyPath == "frame" || keyPath == "bounds") {
       if isCustomFrame == false {
         setBottomFrameAccordingToRTL()
-        setOverlayFrame()
       } else {
         size = min(frame.size.width, frame.size.height)
       }
@@ -874,9 +818,6 @@ open class Floaty: UIView {
     guard let keyboardSize: CGFloat = (notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size.height else {
       return
     }
-    
-    /// Update overlay frame for new orientation dimensions
-    setOverlayFrame()
     
     if isCustomFrame == false {
       setBottomFrameAccordingToRTL(keyboardSize)
