@@ -59,6 +59,11 @@ open class FloatyItem: UIView {
    Title Shadow color.
    */
   @objc open var titleShadowColor: UIColor = UIColor.black
+
+  /**
+    Enable/disable interaction.
+  */
+  @objc open var isEnabled: Bool = true
   
   /**
    If you touch up inside button, it execute handler.
@@ -252,6 +257,7 @@ open class FloatyItem: UIView {
   }
   
   open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    guard isEnabled else { return }
     if touches.count == 1 {
       let touch = touches.first
       if touch?.tapCount == 1 {
@@ -262,6 +268,7 @@ open class FloatyItem: UIView {
   }
   
   open override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    guard isEnabled else { return }
     if touches.count == 1 {
       let touch = touches.first
       if touch?.tapCount == 1 {
@@ -272,6 +279,7 @@ open class FloatyItem: UIView {
   }
   
   open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    guard isEnabled else { return }
     tintLayer.removeFromSuperlayer()
     if touches.count == 1 {
       let touch = touches.first
